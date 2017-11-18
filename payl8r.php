@@ -1,28 +1,11 @@
 <?php
-/*
-* 2007-2015 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2015 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+
+/**
+ * Pstashop Payl8r payment module
+ * 
+ * @author Marek Sitko (email masitko@gmail.com)
+ * 
+ */
 
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
@@ -46,57 +29,101 @@ class Payl8r extends PaymentModule
     {
         $this->name = 'payl8r';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.1';
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->version = '1.0.0';
         $this->author = 'Marek Sitko';
-        $this->controllers = array('payment', 'validation');
-        $this->is_eu_compatible = 1;
+        $this->bootstrap = true;
+        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
+        $this->author = 'Marek Sitko';
+        $this->currencies = true;
+        // $this->controllers = array('payment', 'validation');
+        $this->limited_countries = array('gb');
+        
+        // $this->is_eu_compatible = 1;
 
-        $this->currencies = false;
+
         // $this->currencies_mode = 'checkbox';
 
-        $this->bootstrap = true;
         parent::__construct();
 
-        $this->displayName = $this->trans('Payl8r payment');
-        $this->description = $this->trans('Buy now. Pay later.');
-        $this->confirmUninstall = $this->trans('Are you sure about removing these details?');
+        $this->meta_title = $this->l('Payl8r');
+        $this->displayName = $this->l('Payl8r payments');
+        $this->description = $this->l("Payl8r lets you buy the products you want today. With our flexible repayment plans, you decide when and how to pay back. Unlike credit and debit cards, we don't charge extortionate fees if you don't pay back on time.");
+        $this->confirmUninstall = $this->l('Are you sure about removing these details?');
+        if (!Configuration::get('PS_SSL_ENABLED')) {
+            $this->warning = $this->l('You must enable SSL on the store if you want to use this module');
+        }
+        if (!$this->active) {
+            $this->warning = $this->l('Payl8r not active!');
+        }
+
     }
 
     public function install()
     {
-        Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE, true);
-        if (!parent::install() || !$this->registerHook('paymentReturn') || !$this->registerHook('paymentOptions')) {
+        // Install default
+        if (!parent::install()) {
             return false;
         }
+
+        if (!$this->registrationHooks()) {
+            return false;
+        }
+
+        // if (!$this->installOrderState()) {
+        //     return false;
+        // }
+
+        if (!Configuration::updateValue('PAYL8R_USERNAME', '')
+            || !Configuration::updateValue('PAYL8R_MERCHANT_KEY', '')
+            || !Configuration::updateValue('PAYL8R_SANDBOX', 0)
+            || !Configuration::updateValue('PAYL8R_MIN_VALUE', 0)) {
+            return false;
+        }
+    
+        // Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE, true);
+        // if (!parent::install() || !$this->registerHook('paymentReturn') || !$this->registerHook('paymentOptions')) {
+        //     return false;
+        // }
         return true;
     }
 
     public function uninstall()
     {
-        $languages = Language::getLanguages(false);
-        foreach ($languages as $lang) {
-            if (!Configuration::deleteByName('BANK_WIRE_CUSTOM_TEXT', $lang['id_lang'])) {
-                return false;
-            }
-        }
-
-        if (!Configuration::deleteByName('BANK_WIRE_DETAILS')
-                || !Configuration::deleteByName('BANK_WIRE_OWNER')
-                || !Configuration::deleteByName('BANK_WIRE_ADDRESS')
-                || !Configuration::deleteByName('BANK_WIRE_RESERVATION_DAYS')
-                || !Configuration::deleteByName(self::FLAG_DISPLAY_PAYMENT_INVITE)
-                || !parent::uninstall()) {
+        if (!Configuration::deleteByName('PAYL8R_USERNAME')
+            || !Configuration::deleteByName('PAYL8R_MERCHANT_KEY')
+            || !Configuration::deleteByName('PAYL8R_SANDBOX')
+            || !Configuration::deleteByName('PAYL8R_MIN_VALUE')
+            || !parent::uninstall()) {
             return false;
         }
         return true;
     }
 
+    private function registrationHooks()
+    {
+        if (!$this->registerHook('paymentOptions')
+        //     || !$this->registerHook('paymentReturn')
+        //     || !$this->registerHook('displayOrderConfirmation')
+        //     || !$this->registerHook('displayAdminOrder')
+        //     || !$this->registerHook('actionOrderStatusPostUpdate')
+        //     || !$this->registerHook('actionValidateOrder')
+        //     || !$this->registerHook('actionOrderStatusUpdate')
+        ) {
+            return false;
+        }
+
+
+        return true;
+    }
+
+
     protected function _postValidation()
     {
         if (Tools::isSubmit('btnSubmit')) {
-            Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
-                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE));
+            Configuration::updateValue(
+                self::FLAG_DISPLAY_PAYMENT_INVITE,
+                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)
+            );
 
             if (!Tools::getValue('BANK_WIRE_DETAILS')) {
                 $this->_postErrors[] = $this->trans('Account details are required.', array(), 'Modules.Wirepayment.Admin');
@@ -116,8 +143,8 @@ class Payl8r extends PaymentModule
             $custom_text = array();
             $languages = Language::getLanguages(false);
             foreach ($languages as $lang) {
-                if (Tools::getIsset('BANK_WIRE_CUSTOM_TEXT_'.$lang['id_lang'])) {
-                    $custom_text[$lang['id_lang']] = Tools::getValue('BANK_WIRE_CUSTOM_TEXT_'.$lang['id_lang']);
+                if (Tools::getIsset('BANK_WIRE_CUSTOM_TEXT_' . $lang['id_lang'])) {
+                    $custom_text[$lang['id_lang']] = Tools::getValue('BANK_WIRE_CUSTOM_TEXT_' . $lang['id_lang']);
                 }
             }
             Configuration::updateValue('BANK_WIRE_RESERVATION_DAYS', Tools::getValue('BANK_WIRE_RESERVATION_DAYS'));
@@ -126,7 +153,7 @@ class Payl8r extends PaymentModule
         $this->_html .= $this->displayConfirmation($this->trans('Settings updated', array(), 'Admin.Global'));
     }
 
-    protected function _displayBankWire()
+    protected function _displayHeader()
     {
         return $this->display(__FILE__, 'infos.tpl');
     }
@@ -146,7 +173,7 @@ class Payl8r extends PaymentModule
             $this->_html .= '<br />';
         }
 
-        $this->_html .= $this->_displayBankWire();
+        $this->_html .= $this->_displayHeader();
         $this->_html .= $this->renderForm();
 
         return $this->_html;
@@ -168,9 +195,9 @@ class Payl8r extends PaymentModule
 
         $newOption = new PaymentOption();
         $newOption->setModuleName($this->name)
-                ->setCallToActionText($this->trans('Pay by bank wire', array(), 'Modules.Wirepayment.Shop'))
-                ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true))
-                ->setAdditionalInformation($this->fetch('module:ps_wirepayment/views/templates/hook/ps_wirepayment_intro.tpl'));
+            ->setCallToActionText($this->trans('Pay by bank wire', array(), 'Modules.Wirepayment.Shop'))
+            ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true))
+            ->setAdditionalInformation($this->fetch('module:ps_wirepayment/views/templates/hook/ps_wirepayment_intro.tpl'));
         $payment_options = [
             $newOption,
         ];
@@ -185,14 +212,13 @@ class Payl8r extends PaymentModule
         }
 
         $state = $params['order']->getCurrentState();
-        if (
-            in_array(
-                $state,
-                array(
-                    Configuration::get('PS_OS_BANKWIRE'),
-                    Configuration::get('PS_OS_OUTOFSTOCK'),
-                    Configuration::get('PS_OS_OUTOFSTOCK_UNPAID'),
-                )
+        if (in_array(
+            $state,
+            array(
+                Configuration::get('PS_OS_BANKWIRE'),
+                Configuration::get('PS_OS_OUTOFSTOCK'),
+                Configuration::get('PS_OS_OUTOFSTOCK_UNPAID'),
+            )
         )) {
             $bankwireOwner = $this->owner;
             if (!$bankwireOwner) {
@@ -255,42 +281,54 @@ class Payl8r extends PaymentModule
         $fields_form = array(
             'form' => array(
                 'legend' => array(
-                    'title' => $this->trans('Account details', array(), 'Modules.Wirepayment.Admin'),
+                    'title' => $this->l('Account details'),
                     'icon' => 'icon-envelope'
                 ),
                 'input' => array(
                     array(
                         'type' => 'text',
-                        'label' => $this->trans('Account owner', array(), 'Modules.Wirepayment.Admin'),
-                        'name' => 'BANK_WIRE_OWNER',
+                        'label' => $this->l('Merchant username'),
+                        'name' => 'PAYL8R_USERNAME',
                         'required' => true
                     ),
                     array(
                         'type' => 'textarea',
-                        'label' => $this->trans('Account details', array(), 'Modules.Wirepayment.Admin'),
-                        'name' => 'BANK_WIRE_DETAILS',
-                        'desc' => $this->trans('Such as bank branch, IBAN number, BIC, etc.', array(), 'Modules.Wirepayment.Admin'),
-                        'required' => true
-                    ),
-                    array(
-                        'type' => 'textarea',
-                        'label' => $this->trans('Bank address', array(), 'Modules.Wirepayment.Admin'),
-                        'name' => 'BANK_WIRE_ADDRESS',
+                        'label' => $this->l('Merchant public key'),
+                        'name' => 'PAYL8R_MERCHANT_KEY',
                         'required' => true
                     ),
                 ),
                 'submit' => array(
-                    'title' => $this->trans('Save', array(), 'Admin.Actions'),
+                    'title' => $this->l('Save'),
                 )
             ),
         );
         $fields_form_customization = array(
             'form' => array(
                 'legend' => array(
-                    'title' => $this->trans('Customization', array(), 'Modules.Wirepayment.Admin'),
+                    'title' => $this->l('Customization'),
                     'icon' => 'icon-cogs'
                 ),
-                'input' => array(
+                array(
+                    'type' => 'switch',
+                    'label' => $this->trans('Display the invitation to pay in the order confirmation page', array(), 'Modules.Wirepayment.Admin'),
+                    'name' => self::FLAG_DISPLAY_PAYMENT_INVITE,
+                    'is_bool' => true,
+                    'hint' => $this->trans('Your country\'s legislation may require you to send the invitation to pay by email only. Disabling the option will hide the invitation on the confirmation page.', array(), 'Modules.Wirepayment.Admin'),
+                    'values' => array(
+                        array(
+                            'id' => 'active_on',
+                            'value' => true,
+                            'label' => $this->trans('Enabled', array(), 'Admin.Global'),
+                        ),
+                        array(
+                            'id' => 'active_off',
+                            'value' => false,
+                            'label' => $this->trans('Disabled', array(), 'Admin.Global'),
+                        )
+                    ),
+                ),
+            'input' => array(
                     array(
                         'type' => 'text',
                         'label' => $this->trans('Reservation period', array(), 'Modules.Wirepayment.Admin'),
@@ -303,25 +341,6 @@ class Payl8r extends PaymentModule
                         'name' => 'BANK_WIRE_CUSTOM_TEXT',
                         'desc' => $this->trans('Information on the bank transfer (processing time, starting of the shipping...)', array(), 'Modules.Wirepayment.Admin'),
                         'lang' => true
-                    ),
-                    array(
-                        'type' => 'switch',
-                        'label' => $this->trans('Display the invitation to pay in the order confirmation page', array(), 'Modules.Wirepayment.Admin'),
-                        'name' => self::FLAG_DISPLAY_PAYMENT_INVITE,
-                        'is_bool' => true,
-                        'hint' => $this->trans('Your country\'s legislation may require you to send the invitation to pay by email only. Disabling the option will hide the invitation on the confirmation page.', array(), 'Modules.Wirepayment.Admin'),
-                        'values' => array(
-                            array(
-                                'id' => 'active_on',
-                                'value' => true,
-                                'label' => $this->trans('Enabled', array(), 'Admin.Global'),
-                            ),
-                            array(
-                                'id' => 'active_off',
-                                'value' => false,
-                                'label' => $this->trans('Disabled', array(), 'Admin.Global'),
-                            )
-                        ),
                     ),
                 ),
                 'submit' => array(
@@ -340,8 +359,8 @@ class Payl8r extends PaymentModule
         $helper->id = (int)Tools::getValue('id_carrier');
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'btnSubmit';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='
-            .$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure='
+            . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = array(
             'fields_value' => $this->getConfigFieldsValues(),
@@ -358,7 +377,7 @@ class Payl8r extends PaymentModule
         $languages = Language::getLanguages(false);
         foreach ($languages as $lang) {
             $custom_text[$lang['id_lang']] = Tools::getValue(
-                'BANK_WIRE_CUSTOM_TEXT_'.$lang['id_lang'],
+                'BANK_WIRE_CUSTOM_TEXT_' . $lang['id_lang'],
                 Configuration::get('BANK_WIRE_CUSTOM_TEXT', $lang['id_lang'])
             );
         }
@@ -369,8 +388,10 @@ class Payl8r extends PaymentModule
             'BANK_WIRE_ADDRESS' => Tools::getValue('BANK_WIRE_ADDRESS', Configuration::get('BANK_WIRE_ADDRESS')),
             'BANK_WIRE_RESERVATION_DAYS' => Tools::getValue('BANK_WIRE_RESERVATION_DAYS', Configuration::get('BANK_WIRE_RESERVATION_DAYS')),
             'BANK_WIRE_CUSTOM_TEXT' => $custom_text,
-            self::FLAG_DISPLAY_PAYMENT_INVITE => Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
-                Configuration::get(self::FLAG_DISPLAY_PAYMENT_INVITE))
+            self::FLAG_DISPLAY_PAYMENT_INVITE => Tools::getValue(
+                self::FLAG_DISPLAY_PAYMENT_INVITE,
+                Configuration::get(self::FLAG_DISPLAY_PAYMENT_INVITE)
+            )
         );
     }
 
@@ -382,7 +403,7 @@ class Payl8r extends PaymentModule
             Tools::displayPrice($cart->getOrderTotal(true, Cart::BOTH))
         );
 
-         $bankwireOwner = $this->owner;
+        $bankwireOwner = $this->owner;
         if (!$bankwireOwner) {
             $bankwireOwner = '___________';
         }
