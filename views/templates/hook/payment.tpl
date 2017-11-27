@@ -1,5 +1,5 @@
 {*
-* 2007-2015 PrestaShop
+* 2007-2016 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,14 +18,36 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2015 PrestaShop SA
+*  @copyright  2007-2016 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-<p class="payment_module">
-	<a href="{$link->getModuleLink('ps_wirepayment', 'payment')|escape:'html'}" title="{l s='Pay by bank wire' d='Modules.Wirepayment.Shop'}">
-		<img src="{$this_path_bw}logo.png" alt="{l s='Pay by bank wire' d='Modules.Wirepayment.Shop'}" width="86" height="49"/>
-		{l s='Pay by bank wire' d='Modules.Wirepayment.Shop'}&nbsp;<span>{l s='(order processing will be longer)' d='Modules.Wirepayment.Shop'}</span>
+<style>
+	p.payment_module.payl8r a 
+	{ldelim}
+		padding-left:17px;
+	{rdelim}
+
+   p.payment_module.payl8r a:after
+	{ldelim}
+      display: block;
+      content: "\f054";
+      position: absolute;
+      right: 15px;
+      margin-top: -11px;
+      top: 50%;
+      font-family: "FontAwesome";
+      font-size: 25px;
+      height: 22px;
+      width: 14px;
+      color: #777; 
+	{rdelim}
+</style>
+
+<p class="payment_module payl8r">
+	<a href="{$link->getModuleLink('payl8r', 'payment', [], true)|escape:'html'}" title="{l s='Pay by Payl8r.' mod='payl8r'}">
+		<img src="{$this_path_payl8r}views/img/payl8rlogo.png" alt="{l s='Pay by payl8r' mod='payl8r'}" width="92" height="31" />
+		{l s='Buy online and pay later when it suits you.' mod='payl8r'}
 	</a>
 </p>

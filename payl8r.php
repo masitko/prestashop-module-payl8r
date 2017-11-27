@@ -1,22 +1,26 @@
 <?php
 
 /**
- * Pstashop Payl8r payment module
+ * Prestashop Payl8r payment module
  * 
  * @author Marek Sitko (email masitko@gmail.com)
  * 
  */
 
-use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
 if (!defined('_PS_VERSION_')) {
     exit;
+}
+if( class_exists('MyLogPHP') != true )
+{
+    include_once(_PS_MODULE_DIR_.'payplug/classes/MyLogPHP.class.php');
 }
 
 class Payl8r extends PaymentModule
 {
     protected $_html = '';
     protected $_postErrors = array();
+    protected $log;
 
     public $details;
     public $owner;
@@ -29,12 +33,13 @@ class Payl8r extends PaymentModule
         $this->tab = 'payments_gateways';
         $this->version = '1.0.0';
         $this->author = 'Marek Sitko';
+        $this->need_instance = true;
         $this->bootstrap = true;
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.99.99');
         $this->author = 'Marek Sitko';
         $this->currencies = true;
         // $this->controllers = array('payment', 'validation');
-        $this->limited_countries = array('gb');
+        // $this->limited_countries = array('gb');
         
         // $this->is_eu_compatible = 1;
 
@@ -42,7 +47,11 @@ class Payl8r extends PaymentModule
         // $this->currencies_mode = 'checkbox';
 
         parent::__construct();
+        
 
+        // $this->log = new MyLogPHP(_PS_MODULE_DIR_.$this->name.'/log/debug.csv');
+        // $this->log->info('Starting installation.');
+        
         $this->meta_title = $this->l('Payl8r');
         $this->displayName = $this->l('Payl8r payments');
         $this->description = $this->l("Payl8r lets you buy the products you want today. With our flexible repayment plans, you decide when and how to pay back. Unlike credit and debit cards, we don't charge extortionate fees if you don't pay back on time.");
@@ -99,8 +108,9 @@ class Payl8r extends PaymentModule
 
     private function registrationHooks()
     {
-        if (!$this->registerHook('paymentOptions')
-        //     || !$this->registerHook('paymentReturn')
+        if (!$this->registerHook('payment')
+            || !$this->registerHook('paymentReturn')
+            || !$this->registerHook('displayPaymentEU')
         //     || !$this->registerHook('displayOrderConfirmation')
         //     || !$this->registerHook('displayAdminOrder')
         //     || !$this->registerHook('actionOrderStatusPostUpdate')
@@ -165,41 +175,59 @@ class Payl8r extends PaymentModule
         return $this->_html;
     }
 
-    public function hookPaymentOptions($params)
+    public function hookPayment($params)
     {
         if (!$this->active) {
             return;
         }
-
-        var_dump($_SERVER['REQUEST_URI']);
-        
-                if (!$this->checkCurrency($params['cart'])) {
+        if (!$this->checkCurrency($params['cart'])) {
             return;
         }
 
-        $this->smarty->assign(
-            $this->getTemplateVarInfos()
-        );
-
-        $newOption = new PaymentOption();
-        $newOption->setModuleName($this->name)
-            ->setCallToActionText($this->l('Pay by '))
-            ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/payl8rlogo.png'))
-            ->setAction($this->context->link->getModuleLink($this->name, 'dispatcher', array(), true))
-            // ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true))
-            ->setAdditionalInformation($this->fetch('module:ps_wirepayment/views/templates/hook/ps_wirepayment_intro.tpl'));
+		$this->smarty->assign(array(
+			'this_path' => $this->_path,
+			'this_path_payl8r' => $this->_path,
+			'this_path_ssl' => Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->name.'/'
+		));
+        
+		return $this->display(__FILE__, 'payment.tpl');
+        
+        // $newOption = new PaymentOption();
+        // $newOption->setModuleName($this->name)
+        //     ->setCallToActionText($this->l('Pay by '))
+        //     ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/payl8rlogo.png'))
+        //     ->setAction($this->context->link->getModuleLink($this->name, 'dispatcher', array(), true))
+        //     // ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true))
+        //     ->setAdditionalInformation($this->fetch('module:ps_wirepayment/views/templates/hook/ps_wirepayment_intro.tpl'));
         $payment_options = [
-            $newOption,
         ];
 
         return $payment_options;
     }
 
+	public function hookDisplayPaymentEU($params)
+	{
+		if (!$this->active)
+			return;
+
+		if (!$this->checkCurrency($params['cart']))
+			return;
+
+		$payment_options = array(
+			'cta_text' => $this->l('Pay by Bank Wire'),
+			'logo' => Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/bankwire.jpg'),
+			'action' => $this->context->link->getModuleLink($this->name, 'validation', array(), true)
+		);
+
+		return $payment_options;
+	}
+
+    
     public function hookPaymentReturn($params)
     {
-        // if (!$this->active || !Configuration::get(self::FLAG_DISPLAY_PAYMENT_INVITE)) {
-        //     return;
-        // }
+        if (!$this->active ) {
+            return;
+        }
 
         $state = $params['order']->getCurrentState();
         if (in_array(
@@ -317,7 +345,7 @@ class Payl8r extends PaymentModule
                     'label' => $this->l('Test Mode (Sandbox)'),
                     'name' => 'PAYL8R_SANDBOX',
                     'is_bool' => true,
-                    // 'hint' => $this->trans('Your country\'s legislation may require you to send the invitation to pay by email only. Disabling the option will hide the invitation on the confirmation page.'),
+                    // 'hint' => $this->l('Your country\'s legislation may require you to send the invitation to pay by email only. Disabling the option will hide the invitation on the confirmation page.'),
                     'values' => array(
                         array(
                             'id' => 'active_on',
@@ -333,8 +361,8 @@ class Payl8r extends PaymentModule
                 ),
                     array(
                         'type' => 'text',
-                        'label' => $this->trans('Minimum order value'),
-                        'desc' => $this->trans('Please specify minimum order value in pounds.'),
+                        'label' => $this->l('Minimum order value'),
+                        'desc' => $this->l('Please specify minimum order value in pounds.'),
                         'name' => 'PAYL8R_MIN_VALUE',
                     ),
                 ),
