@@ -75,9 +75,9 @@ class Payl8r extends PaymentModule
       return false;
     }
 
-        // if (!$this->installOrderState()) {
-        //     return false;
-        // }
+    if (!$this->installOrderState()) {
+      return false;
+    }
 
     if (!Configuration::updateValue('PAYL8R_USERNAME', '')
       || !Configuration::updateValue('PAYL8R_MERCHANT_KEY', '')
@@ -85,11 +85,7 @@ class Payl8r extends PaymentModule
       || !Configuration::updateValue('PAYL8R_MIN_VALUE', 0)) {
       return false;
     }
-    
-        // Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE, true);
-        // if (!parent::install() || !$this->registerHook('paymentReturn') || !$this->registerHook('paymentOptions')) {
-        //     return false;
-        // }
+
     return true;
   }
 
@@ -120,6 +116,33 @@ class Payl8r extends PaymentModule
     }
 
 
+    return true;
+  }
+
+  public function installOrderState()
+  {
+    if (!Configuration::get('PAYL8R_OS_PENDING')
+      || !Validate::isLoadedObject(new OrderState(Configuration::get('PAYL8R_OS_PENDING')))) {
+      $order_state = new OrderState();
+      $order_state->name = array();
+      foreach (Language::getLanguages() as $language) {
+        if (Tools::strtolower($language['iso_code']) == 'en') {
+          $order_state->name[$language['id_lang']] = 'Awaiting for Payl8r confirmation';
+        }
+      }
+      $order_state->send_email = false;
+      $order_state->color = '#a1f8a1';
+      $order_state->hidden = false;
+      $order_state->delivery = false;
+      $order_state->logable = false;
+      $order_state->invoice = false;
+      if ($order_state->add()) {
+        $source = _PS_MODULE_DIR_ . 'payl8r/logo.png';
+        $destination = _PS_ROOT_DIR_ . '/img/os/' . (int)$order_state->id . '.gif';
+        copy($source, $destination);
+      }
+      Configuration::updateValue('PAYL8R_OS_PENDING', (int)$order_state->id);
+    }
     return true;
   }
 
