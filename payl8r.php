@@ -396,11 +396,6 @@ class Payl8r extends PaymentModule
 
     public function getConfigFieldsValues()
     {
-        Configuration::updateValue('PAYL8R_USERNAME', Tools::getValue('PAYL8R_USERNAME'));
-        Configuration::updateValue('PAYL8R_MERCHANT_KEY', Tools::getValue('PAYL8R_MERCHANT_KEY'));
-        Configuration::updateValue('PAYL8R_SANDBOX', Tools::getValue('PAYL8R_SANDBOX'));
-        Configuration::updateValue('PAYL8R_MIN_VALUE', Tools::getValue('PAYL8R_MIN_VALUE'));            
-
         return array(
             'PAYL8R_USERNAME' => Tools::getValue('PAYL8R_USERNAME', Configuration::get('PAYL8R_USERNAME')),
             'PAYL8R_MERCHANT_KEY' => Tools::getValue('PAYL8R_MERCHANT_KEY', Configuration::get('PAYL8R_MERCHANT_KEY')),

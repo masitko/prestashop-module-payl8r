@@ -24,7 +24,7 @@
 *}
 
 <style>
-	p.payment_module.payl8r a 
+      p.payment_module.payl8r a 
 	{ldelim}
 		padding-left:17px;
 	{rdelim}
@@ -48,6 +48,6 @@
 <p class="payment_module payl8r">
 	<a href="{$link->getModuleLink('payl8r', 'payment', [], true)|escape:'html'}" title="{l s='Pay by Payl8r.' mod='payl8r'}">
 		<img src="{$this_path_payl8r}views/img/payl8rlogo.png" alt="{l s='Pay by payl8r' mod='payl8r'}" width="92" height="31" />
-		{l s='Buy online and pay later when it suits you.' mod='payl8r'}
+		<span>{l s='Buy online and pay later when it suits you.' mod='payl8r'}</span>
 	</a>
 </p>
