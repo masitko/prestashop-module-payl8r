@@ -54,9 +54,9 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
       $product_description = 'Your order of ' . count($products) . ' items.';
     }		
 
-    $abortUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('outcome'=>'abort'), true);
-    $failUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('outcome'=>'fail'), true);
-    $successUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('outcome'=>'success'), true);
+    $abortUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('status'=>'abort'), true);
+    $failUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('status'=>'fail'), true);
+    $successUrl = $this->context->link->getModuleLink($moduleName, 'validation', array('status'=>'success'), true);
     $returnUrl = $this->context->link->getModuleLink($moduleName, 'response', array(), true);
 		
 		$address_delivery = new Address($cart->id_address_delivery);

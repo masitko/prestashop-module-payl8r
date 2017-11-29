@@ -81,8 +81,8 @@ class Payl8r extends PaymentModule
 
     if (!Configuration::updateValue('PAYL8R_USERNAME', '')
       || !Configuration::updateValue('PAYL8R_MERCHANT_KEY', '')
-      || !Configuration::updateValue('PAYL8R_SANDBOX', 0)
-      || !Configuration::updateValue('PAYL8R_MIN_VALUE', 0)) {
+      || !Configuration::updateValue('PAYL8R_SANDBOX', 1)
+      || !Configuration::updateValue('PAYL8R_MIN_VALUE', 50)) {
       return false;
     }
 
@@ -105,7 +105,8 @@ class Payl8r extends PaymentModule
   {
     if (!$this->registerHook('payment')
       || !$this->registerHook('paymentReturn')
-      || !$this->registerHook('displayPaymentEU')
+      || !$this->registerHook('orderConfirmation')
+      //   || !$this->registerHook('displayPaymentEU')
         //     || !$this->registerHook('displayOrderConfirmation')
         //     || !$this->registerHook('displayAdminOrder')
         //     || !$this->registerHook('actionOrderStatusPostUpdate')
@@ -126,9 +127,7 @@ class Payl8r extends PaymentModule
       $order_state = new OrderState();
       $order_state->name = array();
       foreach (Language::getLanguages() as $language) {
-        if (Tools::strtolower($language['iso_code']) == 'en') {
-          $order_state->name[$language['id_lang']] = 'Awaiting for Payl8r confirmation';
-        }
+        $order_state->name[$language['id_lang']] = 'Awaiting for Payl8r confirmation';
       }
       $order_state->send_email = false;
       $order_state->color = '#a1f8a1';
@@ -217,17 +216,6 @@ class Payl8r extends PaymentModule
     ));
 
     return $this->display(__FILE__, 'payment.tpl');
-        
-        // $newOption = new PaymentOption();
-        // $newOption->setModuleName($this->name)
-        //     ->setCallToActionText($this->l('Pay by '))
-        //     ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/payl8rlogo.png'))
-        //     ->setAction($this->context->link->getModuleLink($this->name, 'dispatcher', array(), true))
-        //     // ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true))
-        //     ->setAdditionalInformation($this->fetch('module:ps_wirepayment/views/templates/hook/ps_wirepayment_intro.tpl'));
-    $payment_options = [];
-
-    return $payment_options;
   }
 
   public function checkCurrency($cart)
@@ -252,80 +240,14 @@ class Payl8r extends PaymentModule
     return $amount >= $minAmount;
   }
 
-
-  public function hookDisplayPaymentEU($params)
+  public function hookOrderConfirmation($params)
   {
-    if (!$this->active)
-      return;
-
-    if (!$this->checkCurrency($params['cart']))
-      return;
-
-    $payment_options = array(
-      'cta_text' => $this->l('Pay by Bank Wire'),
-      'logo' => Media::getMediaPath(_PS_MODULE_DIR_ . $this->name . '/bankwire.jpg'),
-      'action' => $this->context->link->getModuleLink($this->name, 'validation', array(), true)
-    );
-
-    return $payment_options;
+    $this->context->smarty->assign('payl8r_order_reference', pSQL($params['objOrder']->reference));
+    if ($params['objOrder']->module == $this->name) {
+      return $this->display(__FILE__, 'views/templates/front/order-confirmation.tpl');
+    }
   }
 
-
-  public function hookPaymentReturn($params)
-  {
-    if (!$this->active) {
-      return;
-    }
-
-    $state = $params['order']->getCurrentState();
-    if (in_array(
-      $state,
-      array(
-        Configuration::get('PS_OS_BANKWIRE'),
-        Configuration::get('PS_OS_OUTOFSTOCK'),
-        Configuration::get('PS_OS_OUTOFSTOCK_UNPAID'),
-      )
-    )) {
-      $bankwireOwner = $this->owner;
-      if (!$bankwireOwner) {
-        $bankwireOwner = '___________';
-      }
-
-      $bankwireDetails = Tools::nl2br($this->details);
-      if (!$bankwireDetails) {
-        $bankwireDetails = '___________';
-      }
-
-      $bankwireAddress = Tools::nl2br($this->address);
-      if (!$bankwireAddress) {
-        $bankwireAddress = '___________';
-      }
-
-      $this->smarty->assign(array(
-        'shop_name' => $this->context->shop->name,
-        'total' => Tools::displayPrice(
-          $params['order']->getOrdersTotalPaid(),
-          new Currency($params['order']->id_currency),
-          false
-        ),
-        'bankwireDetails' => $bankwireDetails,
-        'bankwireAddress' => $bankwireAddress,
-        'bankwireOwner' => $bankwireOwner,
-        'status' => 'ok',
-        'reference' => $params['order']->reference,
-        'contact_url' => $this->context->link->getPageLink('contact', true)
-      ));
-    } else {
-      $this->smarty->assign(
-        array(
-          'status' => 'failed',
-          'contact_url' => $this->context->link->getPageLink('contact', true),
-        )
-      );
-    }
-
-    return $this->fetch('module:ps_wirepayment/views/templates/hook/payment_return.tpl');
-  }
 
   public function renderAdminForm()
   {
@@ -425,46 +347,4 @@ class Payl8r extends PaymentModule
     );
   }
 
-  public function getTemplateVarInfos()
-  {
-    $cart = $this->context->cart;
-    $total = sprintf(
-      $this->l('%1$s (tax incl.)'),
-      Tools::displayPrice($cart->getOrderTotal(true, Cart::BOTH))
-    );
-
-    $bankwireOwner = $this->owner;
-    if (!$bankwireOwner) {
-      $bankwireOwner = '___________';
-    }
-
-    $bankwireDetails = Tools::nl2br($this->details);
-    if (!$bankwireDetails) {
-      $bankwireDetails = '___________';
-    }
-
-    $bankwireAddress = Tools::nl2br($this->address);
-    if (!$bankwireAddress) {
-      $bankwireAddress = '___________';
-    }
-
-    $bankwireReservationDays = Configuration::get('BANK_WIRE_RESERVATION_DAYS');
-    if (false === $bankwireReservationDays) {
-      $bankwireReservationDays = 7;
-    }
-
-    $bankwireCustomText = Tools::nl2br(Configuration::get('BANK_WIRE_CUSTOM_TEXT', $this->context->language->id));
-    if (false === $bankwireCustomText) {
-      $bankwireCustomText = '';
-    }
-
-    return array(
-      'total' => $total,
-      'bankwireDetails' => $bankwireDetails,
-      'bankwireAddress' => $bankwireAddress,
-      'bankwireOwner' => $bankwireOwner,
-      'bankwireReservationDays' => (int)$bankwireReservationDays,
-      'bankwireCustomText' => $bankwireCustomText,
-    );
-  }
 }
