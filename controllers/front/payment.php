@@ -21,18 +21,6 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
 		$data = $this->prepareRequest($cart, $this->context->customer );
 
 		$this->context->smarty->assign( $data );
-		// 	array(
-
-		// 	'data' => ,
-
-		// 	'nbProducts' => $cart->nbProducts(),
-		// 	'cust_currency' => $cart->id_currency,
-		// 	'currencies' => $this->module->getCurrency((int)$cart->id_currency),
-		// 	'total' => $cart->getOrderTotal(true, Cart::BOTH),
-		// 	'this_path' => $this->module->getPathUri(),
-		// 	'this_path_bw' => $this->module->getPathUri(),
-		// 	'this_path_ssl' => Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->module->name.'/'
-		// ));
 
 		$this->setTemplate('payment_execution.tpl');
 	}
@@ -42,7 +30,6 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
 		$username = Configuration::get('PAYL8R_USERNAME');
 		$publicKey = Configuration::get('PAYL8R_MERCHANT_KEY');
 		$test = Configuration::get('PAYL8R_SANDBOX');
-		// $amount = $cart->getOrderTotal();
 		$products = $cart->getProducts(true);
 		$moduleName = Tools::getValue('module');
 		
@@ -96,8 +83,6 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
       )
     );
 
-		// var_dump($data );
-		
 		$json_data = json_encode($data);
     openssl_public_encrypt($json_data, $crypted, $publicKey);
 
