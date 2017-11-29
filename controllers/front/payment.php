@@ -22,7 +22,7 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
 
 		$this->context->smarty->assign( $data );
 
-		$this->setTemplate('payment_execution.tpl');
+		$this->setTemplate('payment-execution.tpl');
 	}
 
 	protected function prepareRequest($cart, $customer) {

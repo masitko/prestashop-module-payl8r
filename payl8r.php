@@ -75,7 +75,7 @@ class Payl8r extends PaymentModule
       return false;
     }
 
-    if (!$this->installOrderState()) {
+    if (!$this->installOrderStates()) {
       return false;
     }
 
@@ -120,14 +120,14 @@ class Payl8r extends PaymentModule
     return true;
   }
 
-  public function installOrderState()
+  public function installOrderStates()
   {
     if (!Configuration::get('PAYL8R_OS_PENDING')
       || !Validate::isLoadedObject(new OrderState(Configuration::get('PAYL8R_OS_PENDING')))) {
       $order_state = new OrderState();
       $order_state->name = array();
       foreach (Language::getLanguages() as $language) {
-        $order_state->name[$language['id_lang']] = 'Awaiting for Payl8r confirmation';
+        $order_state->name[$language['id_lang']] = 'Awaiting Payl8r payment';
       }
       $order_state->send_email = false;
       $order_state->color = '#a1f8a1';
