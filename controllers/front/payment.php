@@ -17,23 +17,32 @@ class Payl8rPaymentModuleFrontController extends ModuleFrontController
 		if (!$this->module->checkCurrency($cart))
 			Tools::redirect('index.php?controller=order');
 
+    if( !$this->createOrder($cart, $this->context->customer ) ) {
+      Tools::redirect('index.php?controller=order&step=3');
+    }
 			
 		$data = $this->prepareRequest($cart, $this->context->customer );
 
 		$this->context->smarty->assign( $data );
 
 		$this->setTemplate('payment-execution.tpl');
-	}
-
+  }
+  
+	protected function createOrder($cart, $customer) {
+		$currency = $this->context->currency;
+		$total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+		$mailVars = array();		
+    return $this->module->validateOrder($cart->id, Configuration::get('PAYL8R_OS_PENDING'), $total, $this->module->displayName, NULL, $mailVars, (int)$currency->id, false, $customer->secure_key);    
+  }
+    
 	protected function prepareRequest($cart, $customer) {
 
 		$username = Configuration::get('PAYL8R_USERNAME');
 		$publicKey = Configuration::get('PAYL8R_MERCHANT_KEY');
 		$test = Configuration::get('PAYL8R_SANDBOX');
 		$products = $cart->getProducts(true);
-		$moduleName = Tools::getValue('module');
-		
-
+    $moduleName = Tools::getValue('module');
+    
     $product_description = implode("<br>", array_map( function($product) {
 			return $product['name'];
 		}, $products));
