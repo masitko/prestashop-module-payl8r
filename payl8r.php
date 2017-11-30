@@ -11,9 +11,6 @@
 if (!defined('_PS_VERSION_')) {
   exit;
 }
-if (class_exists('MyLogPHP') != true) {
-  include_once(_PS_MODULE_DIR_ . 'payplug/classes/MyLogPHP.class.php');
-}
 
 class Payl8r extends PaymentModule
 {
