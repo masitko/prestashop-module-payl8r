@@ -103,6 +103,10 @@ class Payl8r extends PaymentModule
     if (!$this->registerHook('payment')
       || !$this->registerHook('paymentReturn')
       || !$this->registerHook('orderConfirmation')
+      || !$this->registerHook('extraLeft')
+      || !$this->registerHook('extraRight')
+      || !$this->registerHook('header') 
+      
       //   || !$this->registerHook('displayPaymentEU')
         //     || !$this->registerHook('displayOrderConfirmation')
         //     || !$this->registerHook('displayAdminOrder')
@@ -112,9 +116,29 @@ class Payl8r extends PaymentModule
     ) {
       return false;
     }
-
-
     return true;
+  }
+
+
+  public function hookExtraLeft($params) {
+  }
+  
+  public function hookExtraRight($params) {
+
+    $this->smarty->assign(array(
+      'this_path_payl8r' => $this->_path,
+    ));
+    
+    return $this->display(__FILE__, 'payl8r.tpl');
+  }
+  
+  public function hookHeader($params)
+  {
+      if (!$this->active) {
+          return;
+      }
+      $this->context->controller->addCSS(__PS_BASE_URI__.'modules/payl8r/views/css/pl-calculator.css');
+      // $this->addJsRC(__PS_BASE_URI__.'modules/payplug/views/js/front.js');
   }
 
   public function installOrderStates()
