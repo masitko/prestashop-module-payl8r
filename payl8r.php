@@ -103,8 +103,7 @@ class Payl8r extends PaymentModule
     if (!$this->registerHook('payment')
       || !$this->registerHook('paymentReturn')
       || !$this->registerHook('orderConfirmation')
-      || !$this->registerHook('extraLeft')
-      || !$this->registerHook('extraRight')
+      || !$this->registerHook('payl8rCalculator')
       || !$this->registerHook('header') 
       
       //   || !$this->registerHook('displayPaymentEU')
@@ -119,20 +118,16 @@ class Payl8r extends PaymentModule
     return true;
   }
 
-
-  public function hookExtraLeft($params) {
-  }
-  
-  public function hookExtraRight($params) {
-
-    $this->smarty->assign(array(
-      'this_path_payl8r' => $this->_path,
-    ));
+  public function hookPayl8rCalculator($params) {
     
-    return $this->display(__FILE__, 'payl8r.tpl');
-  }
-  
-  public function hookHeader($params)
+        $this->smarty->assign(array(
+          'this_path_payl8r' => $this->_path,
+        ));
+        
+        return $this->display(__FILE__, 'payl8r.tpl');
+      }
+      
+      public function hookHeader($params)
   {
       if (!$this->active) {
           return;
