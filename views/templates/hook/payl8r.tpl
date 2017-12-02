@@ -1,6 +1,6 @@
 <div class="collapsible">
   <p
-    class="block-title"
+    class="block-title text-center"
     onClick="payl8rSlide()"
   >
     <img
