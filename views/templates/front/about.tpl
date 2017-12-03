@@ -2,7 +2,7 @@
 {* <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/pl-calculator.css"> *}
 <link href="https://fonts.googleapis.com/css?family=Lato:400,300,700" rel="stylesheet" type="text/css">
-
+<div style="max-width:1200px">
 <div id="payl8r_template_full">
 	<div id="payl8r_template_header">
 		<img src="{$this_path_payl8r}views/img/payl8r-logo.jpg" alt="" />
@@ -78,6 +78,7 @@
 	        </div>
         </div>
     </div>
+</div>
 </div>
 
 {* <script src="assets/js/jquery.min.js" charset="utf-8"></script>
