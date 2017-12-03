@@ -242,8 +242,6 @@ class Payl8r extends PaymentModule
   public function hookPayment($params)
   {
 
-    PrestaShopLogger::addLog('Payl8r - Some log', 1);
-
     if (!$this->active) {
       return;
     }

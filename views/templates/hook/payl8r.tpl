@@ -1,7 +1,8 @@
 <div class="collapsible">
   <p
-    class="block-title text-center"
+    class="block-title text-center payl8r-clickable"
     onClick="payl8rSlide()"
+    style="cursor:pointer"
   >
     <img
       src="{$this_path_payl8r}views//img/payl8r-logo.png"
