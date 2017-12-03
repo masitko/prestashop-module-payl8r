@@ -104,6 +104,8 @@ class Payl8r extends PaymentModule
       || !$this->registerHook('paymentReturn')
       || !$this->registerHook('orderConfirmation')
       || !$this->registerHook('payl8rCalculator')
+      || !$this->registerHook('payl8rAbout')
+      || !$this->registerHook('moduleRoutes')
       || !$this->registerHook('header') 
       
       //   || !$this->registerHook('displayPaymentEU')
@@ -118,21 +120,32 @@ class Payl8r extends PaymentModule
     return true;
   }
 
-  public function hookPayl8rCalculator($params) {
-    
-        $this->smarty->assign(array(
-          'this_path_payl8r' => $this->_path,
-        ));
-        
-        return $this->display(__FILE__, 'payl8r.tpl');
-      }
-      
-      public function hookHeader($params)
+  public function hookPayl8rCalculator($params)
   {
-      if (!$this->active) {
-          return;
-      }
-      $this->context->controller->addCSS(__PS_BASE_URI__.'modules/payl8r/views/css/pl-calculator.css');
+
+    $this->smarty->assign(array(
+      'this_path_payl8r' => $this->_path,
+    ));
+
+    return $this->display(__FILE__, 'payl8r.tpl');
+  }
+
+  public function hookPayl8rAbout($params)
+  {
+
+    $this->smarty->assign(array(
+      'this_path_payl8r' => $this->_path,
+    ));
+
+    return $this->display(__FILE__, 'about.tpl');
+  }
+
+  public function hookHeader($params)
+  {
+    if (!$this->active) {
+      return;
+    }
+    $this->context->controller->addCSS(__PS_BASE_URI__ . 'modules/payl8r/views/css/pl-calculator.css');
       // $this->addJsRC(__PS_BASE_URI__.'modules/payplug/views/js/front.js');
   }
 
@@ -210,6 +223,20 @@ class Payl8r extends PaymentModule
     $this->_html .= $this->renderAdminForm();
 
     return $this->_html;
+  }
+
+  public function hookModuleRoutes() {
+    return array(
+        'module-payl8r-about' => array( //Prestashop will use this pattern to compare addresses: module-{module_name}-{controller_name}
+            'controller' => 'about', //module controller name
+            'rule' => 'buy-now-pay-later', //the desired page URL
+            'keywords' => array(),
+            'params' => array(
+                'fc' => 'module',
+                'module' => 'payl8r', //module name
+            )
+        ),
+    );
   }
 
   public function hookPayment($params)

@@ -4,16 +4,11 @@
     onClick="payl8rSlide()"
   >
     <img
-      src="{$this_path_payl8r}views//img/payl8r-logo.png"
+      src="https://payl8r.com/frontend/img/payl8r-logo.png"
       alt="Payl8r logo"
       id="payl8r_logo"
     >
     Buy Now Pay Later Finance
-<img
-      src="{$this_path_payl8r}views/img/payl8r-down-c.png"
-      alt="Payl8r togglr"
-      id="payl8r_down"
-    >    
   </p>
   <!-- Payl8r Integration -->
   <div class="payl8r-content feature-wrapper block-content">
