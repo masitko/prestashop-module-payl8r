@@ -72,7 +72,7 @@
 					    </div>
 					</div>
 					<p>
-						(COMPANY NAME HERE) is a registered Trading name, Credit Introducer and Appointed Representative of Social Money Ltd t/a Payl8r, a company registered in England under company number 08054296 and is authorised and regulated by the Financial Conduct Authority and is entered on the Financial Services Register under reference number: 675283. registered with the Office of the Information Commissioner reference number 08054296.
+						Covet Hair is a registered Trading name, Credit Introducer and Appointed Representative of Social Money Ltd t/a Payl8r, a company registered in England under company number 08054296 and is authorised and regulated by the Financial Conduct Authority and is entered on the Financial Services Register under reference number: 675283. registered with the Office of the Information Commissioner reference number 08054296.
 					</p>
 		        </div>
 	        </div>
