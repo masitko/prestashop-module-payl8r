@@ -24,21 +24,28 @@
       <br>
       * Note: when using Payl8r we cannot guarantee next day delivery due to the authorisation  process.
     </p>
-    <div id="example_frame"></div>
+    <div id="payl8r_frame"></div>
 
     <script
       src="{$this_path_payl8r}views/js/pl-calculator.js"
       charset="utf-8"
     ></script>
     <script>
-								jQuery(document).ready(function(){
-                  jQuery('.payl8r-content').slideToggle();
-                  var price = jQuery('span#our_price_display').attr('content');
-									plcalc.draw_to_frame(price, jQuery('#quantity_wanted'), jQuery('#example_frame'));
-								});
-                function payl8rSlide() {
-                  jQuery('.payl8r-content').slideToggle( 500 );
-                }
+jQuery(document).ready(function(){
+	jQuery('.payl8r-content').slideToggle();
+	drawCalc();
+	jQuery('input, select').change(function(){
+	   setTimeout(drawCalc, 500);
+	});
+});
+function drawCalc() {
+       var price = jQuery('span#our_price_display').html();
+	price = parseInt(price.replace(/[^0-9\.]/g, ''), 10);
+        plcalc.draw_to_frame(price, jQuery('#quantity_wanted'), jQuery('#payl8r_frame'));
+}
+function payl8rSlide() {
+	jQuery('.payl8r-content').slideToggle( 500 );
+}
     </script>
   </div>
 </div>
