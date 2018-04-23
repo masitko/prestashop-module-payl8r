@@ -9,9 +9,10 @@ The extension adds a new payment method to Prestashop 1.6 for customers to pay o
 
 1. Clone this repository into modules folder of your Prestashop project into payl8r folder
 
-2. Enable the module in you admin dashboard
+2. Enable the module in you admin dashboard.
+
   Please note this module is not going to appear in the payments category.
-  Due to Prestshop restriction only oficial payments modules shows in this category.
+  Due to Prestashop restriction only oficial payments modules show in this category.
 
 ### Configuration ###
 
