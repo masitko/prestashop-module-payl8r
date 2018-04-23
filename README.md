@@ -2,7 +2,7 @@
 
 Here you can find an up to date production version of the Prestashop 1.6.x Payl8r Payment Method Extension.
 
-The extension adds a new payment method to Prestashop for customers to pay on finance using Payl8r.
+The extension adds a new payment method to Prestashop 1.6 for customers to pay on finance using Payl8r.
 
 
 ### Installation Guide ###
